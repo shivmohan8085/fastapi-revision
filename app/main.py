@@ -56,3 +56,11 @@ async def get_catagory(catagory:ProductCatagory):
   return {"ProductCatagory" : catagory}
   
   
+  
+  
+  
+  
+# file path
+@app.get("/file/{path:path}")
+async def get_file_path(path: str):
+  return {"path":path}
