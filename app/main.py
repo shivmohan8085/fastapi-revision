@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI , status , Query
 from enum import Enum
 
 app = FastAPI()
@@ -80,14 +80,20 @@ def home():
 
 # get request
 # read and fetch all data
-@app.get('/products')
-async def all_products():
-  # return {"response":"All products"}
+@app.get('/products', status_code=status.HTTP_200_OK)
+async def all_products(search:str|None = Query(default=None, max_length=5) ): # query validation
+  if search:
+      search_lower= search.lower()
+      filtered_productus = []
+      for productus in PRODUCTS:
+        if search_lower in productus['title'].lower():
+          filtered_productus.append(productus)
+      return filtered_productus
   return PRODUCTS
 
 
 # Read and fetch single data
-@app.get('/products/{product_id}')
+@app.get('/products/{product_id}', status_code=status.HTTP_200_OK)
 async def get_product(product_id:int):
   # return {'response':'product details', 'product_id':product_id}
   for product in PRODUCTS:
@@ -96,7 +102,7 @@ async def get_product(product_id:int):
     
     
 
-@app.post('/products')
+@app.post('/products', status_code=status.HTTP_201_CREATED)
 async def add_product(new_product:dict):
   # return {'response':'product created', 'product':product}
   PRODUCTS.append(new_product)
@@ -125,7 +131,7 @@ async def partial_update_product(partially_updated_product_data:dict , product_i
   return {'response':'product partially updated successfully', 'partially_updated_product':partially_updated_product_data,  'product_id':product_id}
 
 
-@app.delete('/products/{product_id}')
+@app.delete('/products/{product_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(product_id:int):
   # return {'response':'product deleted', 'product_id':product_id}
   for index , product in enumerate(PRODUCTS):
@@ -133,9 +139,6 @@ async def delete_product(product_id:int):
       PRODUCTS.pop(index)
 
   return {'response':'product deleted', 'product_id':product_id}
-  
-  
-  
   
   
   ## in parameter predefined values
