@@ -159,6 +159,9 @@ async def get_file_path(path: str):
 
 
 #-------------------------------------------------------
-#                 CRUD 
+#                 Query Parameter
 #-------------------------------------------------------
 
+@app.get('/product-type')
+async def get_product_type(catagory:str|None= None, limit:int|None = None):
+  return {"status":"OK", "catagory":catagory, "limit":limit}
