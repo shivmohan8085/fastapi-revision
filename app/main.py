@@ -1,5 +1,7 @@
-from fastapi import FastAPI , status , Query
+from fastapi import FastAPI , status , Query ,Path
 from enum import Enum
+from typing import Annotated 
+from pydantic import AfterValidator
 
 app = FastAPI()
 
@@ -78,23 +80,76 @@ def home():
 
 
 
-# get request
-# read and fetch all data
+#---------------------------------------------------
+#               Search with query validation  
+#--------------------------------------------------
+# @app.get('/products', status_code=status.HTTP_200_OK)
+# async def all_products(search:str|None = Query(default=None, max_length=5) ):
+#   if search:
+#       search_lower= search.lower()
+#       filtered_productus = []
+#       for productus in PRODUCTS:
+#         if search_lower in productus['title'].lower():
+#           filtered_productus.append(productus)
+#       return filtered_productus
+#   return PRODUCTS
+
+
+
+# #---------------------------------------------------
+# #               Search with Annotaded validation  
+# #---------------------------------------------------
+# @app.get('/products', status_code=status.HTTP_200_OK)
+# async def all_products(
+#     search: Annotated[    # validation with Annotaded
+#         str | None,
+#         Query(
+#             min_length=4,
+#             max_length=20,
+#             pattern=r"^[A-Za-z ]+$"
+#         )
+#     ] = None
+# ): 
+#   if search:
+#       search_lower= search.lower()
+#       filtered_productus = []
+#       for productus in PRODUCTS:
+#         if search_lower in productus['title'].lower():
+#           filtered_productus.append(productus)
+#       return filtered_productus
+#   return PRODUCTS
+
+
+
+
+# --------------------------------------------------
+#               Muntiple Search and alieas, title, description
+#---------------------------------------------------
 @app.get('/products', status_code=status.HTTP_200_OK)
-async def all_products(search:str|None = Query(default=None, max_length=5) ): # query validation
+async def all_products(
+    search: Annotated[    # validation with Annotaded
+        list[str] | None,
+        Query(alias="q",
+              title="search products",
+              description="Search by product title"
+              )
+    ] = None
+): 
   if search:
-      search_lower= search.lower()
+      # search_lower= search.lower()
       filtered_productus = []
       for productus in PRODUCTS:
-        if search_lower in productus['title'].lower():
-          filtered_productus.append(productus)
+        for s in search:
+          if s.lower() in productus['title'].lower():
+             filtered_productus.append(productus)
       return filtered_productus
   return PRODUCTS
 
 
+
 # Read and fetch single data
 @app.get('/products/{product_id}', status_code=status.HTTP_200_OK)
-async def get_product(product_id:int):
+async def get_product(product_id: Annotated[int|None , Path(ge=1)]):
   # return {'response':'product details', 'product_id':product_id}
   for product in PRODUCTS:
     if product['id'] == product_id:
@@ -168,3 +223,24 @@ async def get_file_path(path: str):
 @app.get('/product-type')
 async def get_product_type(catagory:str|None= None, limit:int|None = None):
   return {"status":"OK", "catagory":catagory, "limit":limit}
+
+
+
+
+
+
+
+#-------------------------------------------------------
+#                 Aftervalidation in Query Parameter
+#-------------------------------------------------------
+
+def check_id(id:str):
+  if not id.startswith('prod-'):
+    raise ValueError("Id Must be startswith prod-")
+  return id
+
+@app.get("/test")
+async def test_validation(id:Annotated[str|None , AfterValidator(check_id )]= None):
+  if id:
+    return {"id":id, "message":"Valid Product ID"}
+  return {"id":id, "message":"Invalid Product ID"}
