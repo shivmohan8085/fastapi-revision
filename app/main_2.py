@@ -18,3 +18,12 @@ async def create_product(new_product:Product):
     product_dict.update({"product_with_tax": product_with_tax})
     # return new_product
     return product_dict
+
+
+# add query parameter
+@app.put('/products/{product_id}')
+async def update_project(product_id:int, updated_project_dict:Product, discount: float|None = None):
+    return { "product_id":product_id,
+        "updated_project_dict":updated_project_dict,
+        "discount":discount
+         }
