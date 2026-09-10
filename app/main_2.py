@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from pydantic import BaseModel
+from typing import Annotated
 
 
 app = FastAPI()
@@ -16,12 +17,17 @@ class Seller(BaseModel):
     full_name: str | None = None
 
 @app.post('/products')
-async def create_product(new_product:Product, seller:Seller|None=None):
+async def create_product(
+    new_product:Product,
+    seller:Seller|None,
+    sec_key: Annotated[str, Body()]
+    ):
+    
     product_dict = new_product.model_dump()
     product_with_tax = new_product.price + (new_product.price * 18 / 100)
     product_dict.update({"product_with_tax": product_with_tax})
     # return new_product
-    return {"product":product_dict , "seller":seller}       
+    return {"product":product_dict , "seller":seller, "sec_key":sec_key}       
 
 
 # add query parameter
@@ -31,3 +37,10 @@ async def update_project(product_id:int, updated_project_dict:Product, discount:
         "updated_project_dict":updated_project_dict,
         "discount":discount
          }
+    
+    
+    
+# With embed True
+@app.post('/product-data')
+def post_project_data(product:Annotated[Product, Body(embed=True)]):
+    return {"product":product   }
