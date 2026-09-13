@@ -1,20 +1,19 @@
 from fastapi import FastAPI, Body
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Annotated
 
 
 app = FastAPI()
 
 class Product(BaseModel):
-    id      : int
-    name    : str
-    price   : float
-    stock   : int | None = None
-
+    id: int = Field(..., gt=0, description="Unique product ID")  #... means required fields
+    name: str = Field(..., min_length=1, max_length=100, description="Product name")
+    price: float = Field(..., gt=0, description="Product price")
+    stock: int | None = Field(default=None, ge=0, description="Available stock (optional)")
 
 class Seller(BaseModel):
-    username: str
-    full_name: str | None = None
+    username: str = Field(..., min_length=3, max_length=50, description="Seller username")
+    full_name: str | None = Field(default=None, max_length=100, description="Seller full name (optional)")
 
 @app.post('/products')
 async def create_product(
@@ -38,9 +37,7 @@ async def update_project(product_id:int, updated_project_dict:Product, discount:
         "discount":discount
          }
     
-    
-    
-# With embed True
+# With embed Truegit 
 @app.post('/product-data')
 def post_project_data(product:Annotated[Product, Body(embed=True)]):
-    return {"product":product   }
+    return {"product":product}
